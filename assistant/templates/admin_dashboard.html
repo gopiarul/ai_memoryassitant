@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            background: #0f172a;
+            color: white;
+            font-family: Arial;
+            padding: 20px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        h1 { margin-bottom: 20px; }
+
+        canvas {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        a {
+            color: #38bdf8;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>🛡 Admin Dashboard</h1>
+
+<div class="cards">
+    <div class="card">
+        <h3>👥 Users</h3>
+        <h2>{{ total_users }}</h2>
+    </div>
+
+    <div class="card">
+        <h3>💬 Commands</h3>
+        <h2>{{ total_commands }}</h2>
+    </div>
+
+    <div class="card">
+        <h3>🧠 Memories</h3>
+        <h2>{{ total_memory }}</h2>
+    </div>
+</div>
+
+<h2>📈 Commands Per Day</h2>
+
+<canvas id="chart"></canvas>
+
+<script>
+const ctx = document.getElementById("chart").getContext("2d");
+
+new Chart(ctx, {
+    type: "line",
+    data: {
+        labels: {{ labels|safe }},
+        datasets: [{
+            label: "Commands",
+            data: {{ data|safe }},
+            borderColor: "#38bdf8",
+            backgroundColor: "rgba(56,189,248,0.3)",
+            fill: true,
+            tension: 0.4
+        }]
+    }
+});
+</script>
+
+<br>
+<a href="{% url 'dashboard' %}">⬅ Back to App</a>
+
+</body>
+</html>

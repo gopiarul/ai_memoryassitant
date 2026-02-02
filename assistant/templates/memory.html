@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Memory</title>
+
+<style>
+body {
+    background: #343541;
+    color: white;
+    font-family: Arial, sans-serif;
+    padding: 20px;
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+input {
+    padding: 8px;
+    border-radius: 6px;
+    border: none;
+    width: 60%;
+}
+
+a {
+    color: #ff6b6b;
+    text-decoration: none;
+}
+
+.card {
+    background: #444654;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    animation: fadeIn 0.4s ease-in;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 10px rgba(255, 107, 107, 0.4);
+}
+
+small {
+    color: #aaa;
+}
+
+.delete-btn {
+    color: #ff6b6b;
+    cursor: pointer;
+    float: right;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+
+<body>
+
+<h2>🧠 Saved Memories</h2>
+
+<div class="top-bar">
+    <input type="text" id="search" placeholder="Search memory..." onkeyup="filterMemory()">
+    <a href="{% url 'clear_memory' %}" onclick="return confirm('Delete all memory?')">
+        ❌ Clear All
+    </a>
+</div>
+
+<hr>
+
+<div id="memoryList">
+{% for m in memories %}
+    <div class="card memory-item">
+        <span class="delete-btn">
+            <a href="{% url 'delete_memory' m.id %}" onclick="return confirm('Delete this memory?')">🗑</a>
+        </span>
+
+        <b>{{ m.memory_key|title }}:</b> {{ m.memory_value }} <br>
+        <small>{{ m.created_at }}</small>
+    </div>
+{% empty %}
+    <p>No memory stored</p>
+{% endfor %}
+</div>
+
+<a href="{% url 'dashboard' %}">⬅ Back</a>
+
+<script>
+function filterMemory() {
+    let input = document.getElementById("search").value.toLowerCase();
+    let cards = document.getElementsByClassName("memory-item");
+
+    for (let i = 0; i < cards.length; i++) {
+        let text = cards[i].innerText.toLowerCase();
+        cards[i].style.display = text.includes(input) ? "block" : "none";
+    }
+}
+</script>
+
+</body>
+</html>

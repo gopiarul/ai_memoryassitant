@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Register | AI Memory Assistant</title>
+
+<style>
+body {
+    background: linear-gradient(135deg, #1e1f29, #343541);
+    font-family: Arial, sans-serif;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.auth-box {
+    background: #444654;
+    padding: 30px;
+    border-radius: 15px;
+    width: 350px;
+    box-shadow: 0 0 25px rgba(0,0,0,0.5);
+    animation: fadeIn 0.6s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    border: none;
+    outline: none;
+    font-size: 14px;
+}
+
+input:focus {
+    box-shadow: 0 0 5px #38bdf8;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    background: #38bdf8;
+    border: none;
+    border-radius: 8px;
+    color: black;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    background: #0ea5e9;
+}
+
+.link {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.link a {
+    color: #19a974;
+    text-decoration: none;
+}
+
+.link a:hover {
+    text-decoration: underline;
+}
+
+.message {
+    text-align: center;
+    color: #f87171;
+    margin-top: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="auth-box">
+    <h2>📝 Create Account</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+        <input type="text" name="username" placeholder="Username" required>
+        <input type="password" name="password1" placeholder="Password" required>
+        <input type="password" name="password2" placeholder="Confirm Password" required>
+        <button type="submit">Register</button>
+    </form>
+
+    <div class="link">
+        <p>Already have an account?</p>
+        <a href="/accounts/login/">Login</a>
+    </div>
+
+    {% for msg in messages %}
+        <p class="message">{{ msg }}</p>
+    {% endfor %}
+</div>
+
+</body>
+</html>

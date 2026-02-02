@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+    {%load static%}
+<head>
+    <title>AI Memory Assistant</title>
+
+    <style>
+        body {
+            background: url("{% static 'images/ai6.jpg' %}") no-repeat center center fixed;
+            background-size: cover;
+            font-family: Arial, sans-serif;
+            color: white;
+            margin: 0;
+}
+        /* ---------- TOP NAV ---------- */
+        .navbar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 20px;
+            padding: 15px 30px;
+            background: #202123;
+            border-bottom: 1px solid #444;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .history { color: #facc15; }
+        .memory  { color: #38bdf8; }
+        .profile { color: #a78bfa; }
+        .settings{ color: #f87171; }
+
+        .nav-link:hover {
+            text-decoration: underline;
+            opacity: 0.8;
+        }
+
+        /* ---------- CHAT UI ---------- */
+        .chat-container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .chat-box {
+            height: 70vh;
+            overflow-y: auto;
+            padding: 15px;
+            background: url("{% static 'images/a14.jpg' %}")no-repeat center center fixed;
+            border-radius: 10px;
+            
+        }
+
+        .msg {
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            width: fit-content;
+            max-width: 90%;
+        }
+
+        .user {
+            background: #0d6efd;
+            margin-left: auto;
+        }
+
+        .ai {
+            background: #19a974;
+        }
+
+        form {
+            display: flex;
+            margin-top: 15px;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 6px;
+            border: none;
+            outline: none;
+        }
+
+        button {
+            padding: 12px 20px;
+            margin-left: 10px;
+            border: none;
+            border-radius: 6px;
+            background: #19a974;
+            color: white;
+            cursor: pointer;
+        }
+
+        .mic-btn {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <a class="nav-link history" href="{% url 'history' %}">📜 History</a>
+    <a class="nav-link memory" href="{% url 'memory' %}">🧠 Memory</a>
+    <a class="nav-link profile" href="{% url 'profile' %}">👤 Profile</a>
+    <a class="nav-link settings" href="{% url 'settings' %}">⚙ Settings</a>
+</div>
+
+<!-- CHAT -->
+<div class="chat-container">
+    <h3>🤖 AI Memory Assistant</h3>
+
+    <div class="chat-box" id="chatBox">
+        {% for m in memories %}
+            <div class="msg user"><b>You:</b> {{ m.user_query }}</div>
+            <div class="msg ai"><b>AI:</b> {{ m.assistant_reply }}</div>
+        {% empty %}
+            <p style="opacity:0.6">No history yet. Start chatting 🚀</p>
+        {% endfor %}
+    </div>
+
+    <form method="post" id="textForm">
+        {% csrf_token %}
+        <input type="text" name="query" id="textQuery" placeholder="Ask anything..." required>
+        <button type="submit">Send</button>
+    </form>
+
+    <button class="mic-btn" onclick="startListening()">🎤 Speak</button>
+</div>
+
+<!-- ================= JAVASCRIPT ================= -->
+<script>
+const chatBox = document.getElementById("chatBox");
+
+function scrollDown() {
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// 🔊 Speak
+function speakText(text) {
+    if (!text) return;
+    window.speechSynthesis.cancel();
+    const msg = new SpeechSynthesisUtterance(text);
+    msg.lang = "en-US";
+    speechSynthesis.speak(msg);
+}
+
+// 🎤 Voice input
+function startListening() {
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = "en-US";
+    recognition.start();
+
+    recognition.onresult = e => {
+        document.getElementById("textQuery").value =
+            e.results[0][0].transcript;
+        document.getElementById("textForm").submit();
+    };
+}
+
+// ✅ PAGE LOAD FIX
+window.onload = function () {
+    scrollDown();
+
+    const aiMessages = document.querySelectorAll(".msg.ai");
+    if (!aiMessages.length) return;
+
+    const lastAI = aiMessages[0];
+    const text = lastAI.innerText.replace("AI:", "").trim();
+
+    // 🔥 SYSTEM COMMAND → SPEAK ONLY & STOP
+    if (
+        text.toLowerCase().includes("opening") ||
+        text.toLowerCase().includes("opened")
+    ) {
+        speakText(text);
+        return;
+    }
+
+    // 🤖 NORMAL AI RESPONSE
+    speakText(text);
+};
+
+</script>
+
+</body>
+</html>  

@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h2>Memory Assistant</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+        <input type="text" name="command" placeholder="Enter command">
+        <button type="submit">Send</button>
+    </form>
+
+    <p>{{ response }}</p>
+</body>
+</html>

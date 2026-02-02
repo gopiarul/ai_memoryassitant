@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Settings</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background: linear-gradient(135deg, #1f2937, #111827);
+    color: white;
+    font-family: 'Segoe UI', Arial;
+    padding: 20px;
+}
+
+/* ===== TITLE ===== */
+h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    font-weight: 600;
+}
+
+/* ===== MAIN CARD ===== */
+.container {
+    max-width: 500px;
+    margin: auto;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(15px);
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+}
+
+/* ===== FORM ===== */
+label {
+    font-size: 13px;
+    opacity: 0.8;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="file"] {
+    width: 100%;
+    padding: 12px;
+    margin-top: 6px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    border: none;
+    outline: none;
+    background: #1f2937;
+    color: white;
+}
+
+input:focus {
+    outline: 2px solid #19a974;
+}
+
+/* ===== PROFILE IMAGE ===== */
+.preview {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.preview img {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    border: 3px solid #19a974;
+    object-fit: cover;
+}
+
+/* ===== BUTTON ===== */
+button {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #19a974, #14a06f);
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(25,169,116,0.5);
+}
+
+/* ===== ACTION LINKS ===== */
+.actions {
+    margin-top: 30px;
+}
+
+.actions a {
+    display: block;
+    padding: 14px;
+    margin-bottom: 12px;
+    text-align: center;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    text-decoration: none;
+    border-radius: 12px;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.actions a:hover {
+    background: rgba(255,255,255,0.2);
+    transform: scale(1.02);
+}
+
+/* COLORS */
+.danger { background: #ef4444; }
+.memory { background: #3b82f6; }
+.logout { background: #f97316; }
+.back { background: #6b7280; }
+
+.actions a.danger:hover { background: #dc2626; }
+.actions a.memory:hover { background: #2563eb; }
+.actions a.logout:hover { background: #ea580c; }
+.actions a.back:hover { background: #4b5563; }
+
+</style>
+</head>
+
+<body>
+
+<h2>⚙ Account Settings</h2>
+
+<div class="container">
+
+    <!-- PROFILE IMAGE PREVIEW -->
+    <div class="preview">
+        <img id="previewImg" src="{{ request.user.profile.image.url }}">
+    </div>
+
+    <!-- PROFILE FORM -->
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <label>Username</label>
+        <input type="text" name="username" value="{{ request.user.username }}">
+
+        <label>Email</label>
+        <input type="email" name="email" value="{{ request.user.email }}">
+
+        <label>Profile Picture</label>
+        <input type="file" name="image" onchange="previewImage(event)">
+
+        <button type="submit">💾 Save Changes</button>
+    </form>
+
+    <!-- ACTION BUTTONS -->
+    <div class="actions">
+        <a class="danger" href="{% url 'clear_history' %}" onclick="return confirm('Delete all chat history?')">
+            🗑 Clear Chat History
+        </a>
+
+        <a class="memory" href="{% url 'clear_memory' %}" onclick="return confirm('Delete all memory?')">
+            🧠 Clear Memory
+        </a>
+
+        <a class="logout" href="{% url 'logout' %}">
+            🚪 Logout
+        </a>
+
+        <a class="back" href="{% url 'dashboard' %}">
+            ⬅ Back to Dashboard
+        </a>
+    </div>
+
+</div>
+
+<!-- ===== JS FOR IMAGE PREVIEW ===== -->
+<script>
+function previewImage(event) {
+    const img = document.getElementById("previewImg");
+    img.src = URL.createObjectURL(event.target.files[0]);
+}
+</script>
+
+</body>
+</html>
