@@ -48,11 +48,12 @@ def login_view(request):
 # ---------------- DASHBOARD ----------------
 @login_required
 def dashboard(request):
+    speak_text = ""
+
     if request.method == "POST":
         query = request.POST.get("query")
         response = process_command(request.user, query)
 
-        # 🌐 WEBSITE
         if response.startswith("__OPEN__"):
             AssistantMemory.objects.create(
                 user=request.user,
@@ -61,10 +62,9 @@ def dashboard(request):
             )
             return render(request, "dashboard.html", {
                 "open_url": response.replace("__OPEN__", ""),
-                "memories": AssistantMemory.objects.filter(user=request.user).order_by("id")
+                "memories": AssistantMemory.objects.filter(user=request.user),
             })
 
-        # 💻 SYSTEM COMMAND
         if response.startswith("__SYSTEM__"):
             clean = response.replace("__SYSTEM__", "")
             AssistantMemory.objects.create(
@@ -72,17 +72,25 @@ def dashboard(request):
                 user_query=query,
                 assistant_reply=clean
             )
-            return redirect("dashboard")
+            return render(request, "dashboard.html", {
+                "memories": AssistantMemory.objects.filter(user=request.user),
+                "speak_text": clean
+            })
 
-        # 🤖 AI RESPONSE
         AssistantMemory.objects.create(
             user=request.user,
             user_query=query,
             assistant_reply=response
         )
 
+        speak_text = response
+
     memories = AssistantMemory.objects.filter(user=request.user).order_by("-created_at")
-    return render(request, "dashboard.html", {"memories": memories})
+    return render(request, "dashboard.html", {
+        "memories": memories,
+        "speak_text": speak_text
+    })
+
 
 
 # ---------------- VOICE COMMAND ----------------
