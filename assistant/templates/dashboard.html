@@ -19,27 +19,55 @@
         }
 
         /* ---------- NAVBAR ---------- */
-        .navbar {
-            height: 55px;
-            background: #202123;
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            padding: 0 20px;
-            gap: 20px;
-            border-bottom: 1px solid #444;
-        }
+        /* ---------- MODERN NAVBAR ---------- */
+.navbar {
+    height: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: transparent;
+}
 
-        .nav-link {
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 14px;
-        }
+.nav-container {
+    background: linear-gradient(135deg, #064e3b, #065f46);
+    padding: 12px 30px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    gap: 35px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+}
 
-        .history { color: #facc15; }
-        .memory  { color: #38bdf8; }
-        .profile { color: #a78bfa; }
-        .settings{ color: #f87171; }
+.logo {
+    font-weight: bold;
+    font-size: 18px;
+    color: white;
+}
+
+.nav-item {
+    text-decoration: none;
+    color: #d1fae5;
+    font-size: 14px;
+    transition: 0.3s;
+}
+
+.nav-item:hover {
+    color: white;
+}
+
+.chat-btn {
+    background: white;
+    color: #065f46;
+    padding: 8px 18px;
+    border-radius: 25px;
+    font-weight: bold;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+.chat-btn:hover {
+    transform: scale(1.05);
+}
 
         /* ---------- MAIN LAYOUT ---------- */
         .layout {
@@ -142,11 +170,18 @@
 <body>
 
 <!-- NAVBAR -->
+<!-- MODERN NAVBAR -->
 <div class="navbar">
-    <a class="nav-link history" href="{% url 'history' %}">📜 History</a>
-    <a class="nav-link memory" href="{% url 'memory' %}">🧠 Memory</a>
-    <a class="nav-link profile" href="{% url 'profile' %}">👤 Profile</a>
-    <a class="nav-link settings" href="{% url 'settings' %}">⚙ Settings</a>
+    <div class="nav-container">
+        <div class="logo">AI Assistant</div>
+
+        <a href="{% url 'dashboard' %}" class="nav-item">Home</a>
+        <a href="{% url 'history' %}" class="nav-item">History</a>
+        <a href="{% url 'memory' %}" class="nav-item">Memory</a>
+        <a href="{% url 'profile' %}" class="nav-item">Profile</a>
+
+        <a href="{% url 'settings' %}" class="chat-btn">Let's Chat</a>
+    </div>
 </div>
 
 <!-- MAIN -->
