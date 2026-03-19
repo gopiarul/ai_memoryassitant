@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-b)^gpu@a)06t^ye2qx*5^8%q*afjyti!0anjn-iet$i^-fu+5i
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-GEMINI_API_KEY = "AIzaSyBeqrbsfKmPl1D10aNzYv-_yjjEfTHKd-A"
+GEMINI_API_KEY = "AIzaSyBRnx9iH1nH7j_6fWvSZ94-69c3wClKFMs"
 
 
 
@@ -90,7 +90,7 @@ DATABASES = {
         'NAME': 'gopi',
         'USER': 'root',
         'PASSWORD': 'gopi03',
-        'HOST': 'localhost',
+        'HOST': '127.0.0.1',
         'PORT': '3306',
         'OPTIONS': {
             'charset': 'utf8mb4',

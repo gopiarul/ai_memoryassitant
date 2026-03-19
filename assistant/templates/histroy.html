@@ -1,227 +1,631 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Chat History</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 
 <style>
-/* ---------- GLOBAL ---------- */
+:root {
+  --bg: #080c14;
+  --surface: #0e1420;
+  --surface2: #141c2e;
+  --border: rgba(255,255,255,0.06);
+  --border-hover: rgba(99,179,237,0.3);
+  --accent: #3b82f6;
+  --accent2: #06d6a0;
+  --accent3: #f59e0b;
+  --text: #e2e8f0;
+  --text-muted: #64748b;
+  --text-dim: #94a3b8;
+  --red: #ef4444;
+  --user-color: #93c5fd;
+  --ai-color: #6ee7b7;
+  --glow: rgba(59,130,246,0.15);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
 body {
-    background: linear-gradient(135deg, #1f2933, #111827);
-    color: #e5e7eb;
-    font-family: 'Segoe UI', Tahoma, sans-serif;
-    padding: 20px;
-    margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
-h2 {
-    text-align: center;
-    margin-bottom: 20px;
+/* BG GRID */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
 }
 
-/* ---------- TOP BAR ---------- */
-.top-bar {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    background: rgba(255,255,255,0.05);
-    backdrop-filter: blur(10px);
-    padding: 15px;
-    border-radius: 12px;
-    margin-bottom: 20px;
+/* RADIAL GLOW TOP LEFT */
+body::after {
+  content: '';
+  position: fixed;
+  top: -200px;
+  left: -200px;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
 }
 
-.top-bar form {
-    display: flex;
-    gap: 10px;
-    flex: 1;
+.page-wrapper {
+  position: relative;
+  z-index: 1;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 40px 20px 80px;
 }
 
-.top-bar input {
-    flex: 1;
-    padding: 10px;
-    border-radius: 8px;
-    border: none;
-    outline: none;
+/* ─── HEADER ─── */
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 40px;
+  gap: 16px;
 }
 
-.top-bar button {
-    padding: 10px 18px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    background: #22c55e;
-    color: white;
+.header-left h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  line-height: 1;
+  background: linear-gradient(135deg, #e2e8f0 30%, #3b82f6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-/* ---------- EXPORT BUTTONS ---------- */
-.export {
-    text-align: center;
-    margin: 20px 0;
+.header-left p {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-top: 6px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
-.export button {
-    padding: 10px 18px;
-    margin: 5px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    font-weight: bold;
+.clear-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.25);
+  color: #f87171;
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+  white-space: nowrap;
 }
 
-.csv { background: #22c55e; color: white; }
-.pdf { background: #ef4444; color: white; }
-
-/* ---------- HISTORY CARD ---------- */
-.history-container {
-    max-width: 900px;
-    margin: auto;
+.clear-btn:hover {
+  background: rgba(239,68,68,0.2);
+  border-color: rgba(239,68,68,0.5);
 }
 
-.box {
-    background: rgba(255,255,255,0.08);
-    backdrop-filter: blur(12px);
-    padding: 18px;
-    margin-bottom: 15px;
-    border-radius: 14px;
-    transition: all 0.3s ease;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+/* ─── SEARCH BAR ─── */
+.search-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
 }
 
-.box:hover {
-    transform: translateY(-5px);
-    background: rgba(255,255,255,0.12);
+.search-bar form {
+  display: flex;
+  flex: 1;
+  gap: 10px;
 }
 
-.date {
-    font-size: 12px;
-    color: #9ca3af;
-    margin-bottom: 5px;
+.search-input-wrap {
+  flex: 1;
+  position: relative;
 }
 
-.you {
-    color: #60a5fa;
+.search-input-wrap svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
 }
 
-.ai {
-    color: #34d399;
+.search-bar input {
+  width: 100%;
+  padding: 12px 14px 12px 42px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-/* ---------- ACTIONS ---------- */
-.actions {
-    margin-top: 10px;
-    text-align: right;
+.search-bar input:focus {
+  border-color: rgba(59,130,246,0.4);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.08);
 }
 
-.actions a {
-    color: #f87171;
-    text-decoration: none;
-    font-size: 14px;
+.search-bar input::placeholder { color: var(--text-muted); }
+
+.search-btn {
+  padding: 12px 22px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  white-space: nowrap;
 }
 
-/* ---------- DELETE BY DATE ---------- */
-.delete-date {
-    background: rgba(255,255,255,0.05);
-    padding: 15px;
-    border-radius: 12px;
-    max-width: 500px;
-    margin: 30px auto;
-    text-align: center;
+.search-btn:hover { background: #2563eb; transform: translateY(-1px); }
+.search-btn:active { transform: translateY(0); }
+
+/* ─── EXPORT ROW ─── */
+.export-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 32px;
 }
 
-.delete-date input {
-    padding: 8px;
-    border-radius: 6px;
-    border: none;
-    margin: 5px;
+.export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+  letter-spacing: 0.02em;
 }
 
-.delete-date button {
-    padding: 8px 16px;
-    background: #dc2626;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
+.csv-btn {
+  background: rgba(6,214,160,0.12);
+  border: 1px solid rgba(6,214,160,0.25);
+  color: #34d399;
+}
+.csv-btn:hover { background: rgba(6,214,160,0.22); }
+
+.pdf-btn {
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.25);
+  color: #f87171;
+}
+.pdf-btn:hover { background: rgba(239,68,68,0.2); }
+
+/* ─── DIVIDER LABEL ─── */
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  color: var(--text-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
-/* ---------- FOOTER ---------- */
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ─── HISTORY CARDS ─── */
+.history-list { display: flex; flex-direction: column; gap: 12px; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px 22px;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+  animation: cardIn 0.4s ease both;
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.card:nth-child(1) { animation-delay: 0.03s; }
+.card:nth-child(2) { animation-delay: 0.07s; }
+.card:nth-child(3) { animation-delay: 0.11s; }
+.card:nth-child(4) { animation-delay: 0.15s; }
+.card:nth-child(5) { animation-delay: 0.19s; }
+
+.card:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(59,130,246,0.06);
+}
+
+.card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.card-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.04);
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.delete-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 5px 10px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.delete-link:hover {
+  color: #f87171;
+  background: rgba(239,68,68,0.08);
+  border-color: rgba(239,68,68,0.2);
+}
+
+.chat-block { display: flex; flex-direction: column; gap: 12px; }
+
+.chat-line { display: flex; gap: 12px; align-items: flex-start; }
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 1px;
+  font-family: 'Syne', sans-serif;
+}
+
+.avatar.you {
+  background: rgba(59,130,246,0.15);
+  color: var(--user-color);
+  border: 1px solid rgba(59,130,246,0.2);
+}
+
+.avatar.ai {
+  background: rgba(6,214,160,0.12);
+  color: var(--ai-color);
+  border: 1px solid rgba(6,214,160,0.2);
+}
+
+.chat-bubble {
+  flex: 1;
+  line-height: 1.65;
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+.chat-bubble strong {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: block;
+  margin-bottom: 3px;
+}
+
+.chat-bubble.you-bubble strong { color: var(--user-color); }
+.chat-bubble.ai-bubble strong { color: var(--ai-color); }
+
+.divider-line {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+/* ─── EMPTY STATE ─── */
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--text-muted);
+}
+
+.empty-state svg {
+  width: 52px;
+  height: 52px;
+  opacity: 0.2;
+  margin-bottom: 16px;
+}
+
+.empty-state p {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-dim);
+  opacity: 0.5;
+}
+
+.empty-state span {
+  font-size: 13px;
+  margin-top: 8px;
+  display: block;
+}
+
+/* ─── DELETE BY DATE ─── */
+.date-delete-section {
+  margin-top: 48px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 28px 30px;
+}
+
+.date-delete-section h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+
+.date-delete-section p {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.date-delete-form {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.field-group label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.date-input {
+  padding: 10px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+  color-scheme: dark;
+}
+
+.date-input:focus {
+  border-color: rgba(239,68,68,0.4);
+}
+
+.delete-range-btn {
+  padding: 10px 20px;
+  background: rgba(239,68,68,0.12);
+  border: 1px solid rgba(239,68,68,0.3);
+  color: #f87171;
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  align-self: flex-end;
+}
+
+.delete-range-btn:hover {
+  background: rgba(239,68,68,0.22);
+  border-color: rgba(239,68,68,0.5);
+}
+
+/* ─── FOOTER ─── */
 .footer {
-    text-align: center;
-    margin-top: 30px;
+  display: flex;
+  justify-content: center;
+  margin-top: 48px;
 }
 
-.footer a {
-    color: #93c5fd;
-    text-decoration: none;
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 13px;
+  padding: 10px 20px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: all 0.2s;
 }
 
-/* ---------- RESPONSIVE ---------- */
-@media(max-width: 600px) {
-    .top-bar {
-        flex-direction: column;
-        gap: 10px;
-    }
+.back-link:hover {
+  color: var(--text);
+  border-color: rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.04);
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 600px) {
+  .header { flex-direction: column; align-items: flex-start; }
+  .export-row { flex-wrap: wrap; }
+  .date-delete-form { flex-direction: column; }
+  .date-input { width: 100%; }
 }
 </style>
 </head>
-
 <body>
 
-<h2>🕒 Chat History</h2>
+<div class="page-wrapper">
 
-<div class="top-bar">
-    <form method="get">
-        <input name="q" placeholder="Search history..." value="{{ search }}">
-        <button>Search</button>
-    </form>
-
-    <a href="{% url 'clear_history' %}" onclick="return confirm('Delete all history?')">
-        <button style="background:#dc2626;">Clear All</button>
-    </a>
-</div>
-
-<div class="export">
-    <a href="{% url 'export_csv' %}">
-        <button class="csv">⬇ Download CSV</button>
-    </a>
-
-    <a href="{% url 'export_pdf' %}">
-        <button class="pdf">⬇ Download PDF</button>
-    </a>
-</div>
-
-<div class="history-container">
-{% for h in histories %}
-    <div class="box">
-        <div class="date">{{ h.created_at }}</div>
-
-        <b class="you">You:</b> {{ h.user_query }} <br><br>
-        <b class="ai">AI:</b> {{ h.assistant_reply }}
-
-        <div class="actions">
-            <a href="{% url 'delete_history' h.id %}">🗑 Delete</a>
-        </div>
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <h1>Chat History</h1>
+      <p>All your conversations in one place</p>
     </div>
-{% empty %}
-    <p style="text-align:center;">No history found 🚀</p>
-{% endfor %}
-</div>
+    <a href="{% url 'clear_history' %}" onclick="return confirm('Delete all history?')" class="clear-btn">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+      Clear All
+    </a>
+  </div>
 
-<div class="delete-date">
-    <h3>📆 Delete by Date</h3>
-    <form method="post" action="{% url 'delete_date' %}">
-        {% csrf_token %}
-        <input type="date" name="start" required>
-        <input type="date" name="end" required>
-        <br><br>
-        <button>Delete</button>
+  <!-- SEARCH -->
+  <div class="search-bar">
+    <form method="get">
+      <div class="search-input-wrap">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input name="q" placeholder="Search conversations…" value="{{ search }}">
+      </div>
+      <button type="submit" class="search-btn">Search</button>
     </form>
-</div>
+  </div>
 
-<div class="footer">
-    <a href="{% url 'dashboard' %}">⬅ Back to Dashboard</a>
-</div>
+  <!-- EXPORTS -->
+  <div class="export-row">
+    <a href="{% url 'export_csv' %}" class="export-btn csv-btn">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export CSV
+    </a>
+    <a href="{% url 'export_pdf' %}" class="export-btn pdf-btn">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export PDF
+    </a>
+  </div>
 
+  <!-- HISTORY LIST -->
+  <div class="section-label">Conversation log</div>
+
+  <div class="history-list">
+    {% for h in histories %}
+    <div class="card">
+
+      <div class="card-meta">
+        <span class="card-date">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          {{ h.created_at }}
+        </span>
+        <a href="{% url 'delete_history' h.id %}" class="delete-link">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+          Delete
+        </a>
+      </div>
+
+      <div class="chat-block">
+        <div class="chat-line">
+          <div class="avatar you">U</div>
+          <div class="chat-bubble you-bubble">
+            <strong>You</strong>
+            {{ h.user_query }}
+          </div>
+        </div>
+        <div class="divider-line"></div>
+        <div class="chat-line">
+          <div class="avatar ai">AI</div>
+          <div class="chat-bubble ai-bubble">
+            <strong>Assistant</strong>
+            {{ h.assistant_reply }}
+          </div>
+        </div>
+      </div>
+
+    </div>
+    {% empty %}
+    <div class="empty-state">
+      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      <p>No conversations yet</p>
+      <span>Your chat history will appear here</span>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- DELETE BY DATE -->
+  <div class="date-delete-section">
+    <h3>Delete by Date Range</h3>
+    <p>Permanently remove all conversations within a selected period.</p>
+    <form method="post" action="{% url 'delete_date' %}" class="date-delete-form">
+      {% csrf_token %}
+      <div class="field-group">
+        <label>From</label>
+        <input type="date" name="start" required class="date-input">
+      </div>
+      <div class="field-group">
+        <label>To</label>
+        <input type="date" name="end" required class="date-input">
+      </div>
+      <button type="submit" class="delete-range-btn">
+        Delete Range
+      </button>
+    </form>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <a href="{% url 'dashboard' %}" class="back-link">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+      </svg>
+      Back to Dashboard
+    </a>
+  </div>
+
+</div>
 </body>
 </html>

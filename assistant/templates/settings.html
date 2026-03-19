@@ -1,183 +1,546 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Settings</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 
 <style>
-* {
-    box-sizing: border-box;
+:root {
+  --bg:        #07090f;
+  --panel:     #0c0f1a;
+  --surface:   #111522;
+  --surface2:  #161b2e;
+  --border:    rgba(255,255,255,0.06);
+  --border-hi: rgba(59,130,246,0.28);
+  --accent:    #3b82f6;
+  --green:     #10b981;
+  --red:       #ef4444;
+  --orange:    #f97316;
+  --text:      #dde4f0;
+  --dim:       #6b7a99;
+  --muted:     #2a3048;
 }
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-    background: linear-gradient(135deg, #1f2937, #111827);
-    color: white;
-    font-family: 'Segoe UI', Arial;
-    padding: 20px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
-/* ===== TITLE ===== */
-h2 {
-    text-align: center;
-    margin-bottom: 25px;
-    font-weight: 600;
+/* ── ORBS ── */
+.orb {
+  position: fixed; border-radius: 50%;
+  pointer-events: none; filter: blur(120px); z-index: 0;
+}
+.orb1 { width: 480px; height: 480px; top: -180px; left: -160px;
+  background: radial-gradient(circle, rgba(59,130,246,0.09), transparent 70%); }
+.orb2 { width: 340px; height: 340px; bottom: -80px; right: -60px;
+  background: radial-gradient(circle, rgba(16,185,129,0.07), transparent 70%); }
+
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(59,130,246,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59,130,246,0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none; z-index: 0;
 }
 
-/* ===== MAIN CARD ===== */
-.container {
-    max-width: 500px;
-    margin: auto;
-    background: rgba(255,255,255,0.08);
-    backdrop-filter: blur(15px);
-    padding: 25px;
-    border-radius: 20px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+/* ── WRAPPER ── */
+.wrapper {
+  position: relative; z-index: 2;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
 }
 
-/* ===== FORM ===== */
-label {
-    font-size: 13px;
-    opacity: 0.8;
+/* ── PAGE HEADER ── */
+.page-header {
+  margin-bottom: 36px;
+  animation: fadeUp 0.4s ease both;
 }
 
-input[type="text"],
-input[type="email"],
-input[type="file"] {
-    width: 100%;
-    padding: 12px;
-    margin-top: 6px;
-    margin-bottom: 15px;
-    border-radius: 10px;
-    border: none;
-    outline: none;
-    background: #1f2937;
-    color: white;
+.header-eyebrow {
+  font-size: 11px; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--accent); margin-bottom: 6px;
+  display: flex; align-items: center; gap: 8px;
+}
+.eyebrow-line { width: 24px; height: 1px; background: var(--accent); opacity: 0.5; }
+
+.page-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 36px; font-weight: 800; letter-spacing: -0.03em; line-height: 1;
+  background: linear-gradient(135deg, #e2e8f0 30%, #3b82f6);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.page-sub { font-size: 13px; color: var(--dim); margin-top: 7px; }
+
+/* ── AVATAR SECTION ── */
+.avatar-section {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 28px 24px;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  margin-bottom: 16px;
+  animation: fadeUp 0.4s 0.05s ease both;
+  position: relative;
+  overflow: hidden;
 }
 
-input:focus {
-    outline: 2px solid #19a974;
+/* top glow line */
+.avatar-section::before {
+  content: ''; position: absolute;
+  top: 0; left: 50%; transform: translateX(-50%);
+  width: 140px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
 }
 
-/* ===== PROFILE IMAGE ===== */
-.preview {
-    text-align: center;
-    margin-bottom: 15px;
+.avatar-wrap {
+  position: relative; flex-shrink: 0;
 }
 
-.preview img {
-    width: 110px;
-    height: 110px;
-    border-radius: 50%;
-    border: 3px solid #19a974;
-    object-fit: cover;
+.avatar-wrap img {
+  width: 90px; height: 90px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  border: 2px solid rgba(59,130,246,0.35);
+  box-shadow: 0 0 0 5px rgba(59,130,246,0.07), 0 12px 32px rgba(0,0,0,0.4);
 }
 
-/* ===== BUTTON ===== */
-button {
-    width: 100%;
-    padding: 14px;
-    border: none;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #19a974, #14a06f);
-    color: white;
-    font-size: 15px;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
+/* spinning ring */
+.avatar-ring {
+  position: absolute; inset: -7px;
+  border-radius: 50%;
+  border: 1.5px solid transparent;
+  background: conic-gradient(from 0deg, var(--accent), var(--green), var(--accent)) border-box;
+  -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: destination-out; mask-composite: exclude;
+  animation: spin 7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.upload-trigger {
+  position: absolute; bottom: 0; right: 0;
+  width: 26px; height: 26px;
+  background: var(--accent);
+  border: 2px solid var(--panel);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 0.2s;
+}
+.upload-trigger:hover { background: #2563eb; }
+
+.avatar-info h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px; font-weight: 700; letter-spacing: -0.02em;
+  margin-bottom: 4px;
+}
+.avatar-info p {
+  font-size: 12px; color: var(--dim); margin-bottom: 10px;
+}
+.upload-hint {
+  font-size: 11px; color: var(--muted);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 5px 10px;
+  display: inline-block;
 }
 
-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(25,169,116,0.5);
+/* ── FORM CARD ── */
+.form-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 28px 24px;
+  margin-bottom: 16px;
+  animation: fadeUp 0.4s 0.1s ease both;
 }
 
-/* ===== ACTION LINKS ===== */
-.actions {
-    margin-top: 30px;
+.card-label {
+  display: flex; align-items: center; gap: 9px;
+  margin-bottom: 20px;
 }
 
-.actions a {
-    display: block;
-    padding: 14px;
-    margin-bottom: 12px;
-    text-align: center;
-    background: rgba(255,255,255,0.1);
-    color: white;
-    text-decoration: none;
-    border-radius: 12px;
-    transition: background 0.3s, transform 0.2s;
+.card-label-text {
+  font-family: 'Syne', sans-serif;
+  font-size: 14px; font-weight: 700;
+  color: var(--text);
 }
 
-.actions a:hover {
-    background: rgba(255,255,255,0.2);
-    transform: scale(1.02);
+.card-label-line { flex: 1; height: 1px; background: var(--border); }
+
+/* field */
+.field { margin-bottom: 16px; }
+.field:last-of-type { margin-bottom: 0; }
+
+.field label {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 11px; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--dim); margin-bottom: 7px;
 }
 
-/* COLORS */
-.danger { background: #ef4444; }
-.memory { background: #3b82f6; }
-.logout { background: #f97316; }
-.back { background: #6b7280; }
+.field input[type="text"],
+.field input[type="email"] {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.field input:focus {
+  border-color: var(--border-hi);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.07);
+}
+.field input::placeholder { color: var(--muted); }
 
-.actions a.danger:hover { background: #dc2626; }
-.actions a.memory:hover { background: #2563eb; }
-.actions a.logout:hover { background: #ea580c; }
-.actions a.back:hover { background: #4b5563; }
+/* file input hidden, label acts as trigger */
+.file-input-wrap { position: relative; }
 
+.file-label {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 16px;
+  background: var(--surface);
+  border: 1px dashed rgba(59,130,246,0.25);
+  border-radius: 11px;
+  color: var(--dim);
+  font-size: 13px; cursor: pointer;
+  transition: all 0.2s;
+}
+.file-label:hover {
+  border-color: rgba(59,130,246,0.5);
+  color: var(--text);
+  background: var(--surface2);
+}
+
+.file-label svg { flex-shrink: 0; }
+#fileNameDisplay { font-size: 12px; color: var(--dim); }
+
+input[type="file"] { display: none; }
+
+/* save button */
+.save-btn {
+  width: 100%;
+  padding: 13px;
+  background: var(--accent);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: all 0.2s;
+  margin-top: 20px;
+}
+.save-btn:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px rgba(59,130,246,0.3);
+}
+.save-btn:active { transform: translateY(0); }
+
+/* ── DANGER ZONE ── */
+.danger-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 24px;
+  animation: fadeUp 0.4s 0.15s ease both;
+}
+
+.action-row {
+  display: flex; flex-direction: column; gap: 10px;
+  margin-top: 20px;
+}
+
+.action-link {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 16px;
+  border-radius: 12px;
+  text-decoration: none;
+  font-size: 13px; font-weight: 500;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.action-link .action-icon {
+  width: 32px; height: 32px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.action-link .action-text { flex: 1; }
+.action-link .action-text strong { display: block; font-size: 13px; }
+.action-link .action-text span { font-size: 11px; opacity: 0.6; }
+
+.action-link .action-arrow {
+  color: var(--muted);
+  transition: transform 0.2s, color 0.2s;
+}
+.action-link:hover .action-arrow { transform: translateX(3px); }
+
+/* danger */
+.link-danger {
+  background: rgba(239,68,68,0.05);
+  color: #fca5a5;
+}
+.link-danger .action-icon { background: rgba(239,68,68,0.1); color: #f87171; }
+.link-danger:hover {
+  background: rgba(239,68,68,0.1);
+  border-color: rgba(239,68,68,0.2);
+}
+
+/* blue */
+.link-blue {
+  background: rgba(59,130,246,0.05);
+  color: #93c5fd;
+}
+.link-blue .action-icon { background: rgba(59,130,246,0.1); color: #60a5fa; }
+.link-blue:hover {
+  background: rgba(59,130,246,0.1);
+  border-color: rgba(59,130,246,0.2);
+}
+
+/* orange */
+.link-orange {
+  background: rgba(249,115,22,0.05);
+  color: #fdba74;
+}
+.link-orange .action-icon { background: rgba(249,115,22,0.1); color: #fb923c; }
+.link-orange:hover {
+  background: rgba(249,115,22,0.1);
+  border-color: rgba(249,115,22,0.2);
+}
+
+/* gray */
+.link-gray {
+  background: rgba(255,255,255,0.03);
+  color: var(--dim);
+}
+.link-gray .action-icon { background: var(--surface2); color: var(--dim); }
+.link-gray:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+/* ── ANIMATION ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 500px) {
+  .avatar-section { flex-direction: column; text-align: center; }
+  .page-title { font-size: 28px; }
+}
 </style>
 </head>
-
 <body>
 
-<h2>⚙ Account Settings</h2>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
 
-<div class="container">
+<div class="wrapper">
 
-    <!-- PROFILE IMAGE PREVIEW -->
-    <div class="preview">
-        <img id="previewImg" src="{{ request.user.profile.image.url }}">
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="header-eyebrow">
+      <div class="eyebrow-line"></div>
+      Account
+    </div>
+    <h1 class="page-title">Settings</h1>
+    <p class="page-sub">Manage your profile, preferences, and data</p>
+  </div>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <!-- AVATAR SECTION -->
+    <div class="avatar-section">
+      <div class="avatar-wrap">
+        <div class="avatar-ring"></div>
+        <img id="previewImg" src="{{ request.user.profile.image.url }}" alt="Profile">
+        <label for="imageInput" class="upload-trigger" title="Change photo">
+          <svg width="12" height="12" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+        </label>
+      </div>
+      <div class="avatar-info">
+        <h3>{{ request.user.username }}</h3>
+        <p>{{ request.user.email }}</p>
+        <span class="upload-hint">Click camera to change photo</span>
+      </div>
     </div>
 
     <!-- PROFILE FORM -->
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
+    <div class="form-card">
+      <div class="card-label">
+        <svg width="14" height="14" fill="none" stroke="#3b82f6" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        <span class="card-label-text">Profile Info</span>
+        <div class="card-label-line"></div>
+      </div>
 
-        <label>Username</label>
-        <input type="text" name="username" value="{{ request.user.username }}">
+      <div class="field">
+        <label>
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+          Username
+        </label>
+        <input type="text" name="username" value="{{ request.user.username }}" placeholder="Enter username">
+      </div>
 
-        <label>Email</label>
-        <input type="email" name="email" value="{{ request.user.email }}">
+      <div class="field">
+        <label>
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+          Email Address
+        </label>
+        <input type="email" name="email" value="{{ request.user.email }}" placeholder="Enter email">
+      </div>
 
-        <label>Profile Picture</label>
-        <input type="file" name="image" onchange="previewImage(event)">
+      <div class="field">
+        <label>
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          Profile Picture
+        </label>
+        <div class="file-input-wrap">
+          <label class="file-label" for="imageInput">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <span id="fileNameDisplay">Choose a file to upload…</span>
+          </label>
+          <input type="file" id="imageInput" name="image" accept="image/*" onchange="previewImage(event)">
+        </div>
+      </div>
 
-        <button type="submit">💾 Save Changes</button>
-    </form>
-
-    <!-- ACTION BUTTONS -->
-    <div class="actions">
-        <a class="danger" href="{% url 'clear_history' %}" onclick="return confirm('Delete all chat history?')">
-            🗑 Clear Chat History
-        </a>
-
-        <a class="memory" href="{% url 'clear_memory' %}" onclick="return confirm('Delete all memory?')">
-            🧠 Clear Memory
-        </a>
-
-        <a class="logout" href="{% url 'logout' %}">
-            🚪 Logout
-        </a>
-
-        <a class="back" href="{% url 'dashboard' %}">
-            ⬅ Back to Dashboard
-        </a>
+      <button type="submit" class="save-btn">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+          <polyline points="17 21 17 13 7 13 7 21"/>
+          <polyline points="7 3 7 8 15 8"/>
+        </svg>
+        Save Changes
+      </button>
     </div>
+
+  </form>
+
+  <!-- DANGER ZONE -->
+  <div class="danger-card">
+    <div class="card-label">
+      <svg width="14" height="14" fill="none" stroke="#ef4444" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      <span class="card-label-text">Danger Zone</span>
+      <div class="card-label-line"></div>
+    </div>
+
+    <div class="action-row">
+
+      <a href="{% url 'clear_history' %}" onclick="return confirm('Delete all chat history?')" class="action-link link-danger">
+        <div class="action-icon">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+          </svg>
+        </div>
+        <div class="action-text">
+          <strong>Clear Chat History</strong>
+          <span>Permanently remove all conversations</span>
+        </div>
+        <svg class="action-arrow" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+
+      <a href="{% url 'clear_memory' %}" onclick="return confirm('Delete all memory?')" class="action-link link-blue">
+        <div class="action-icon">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+          </svg>
+        </div>
+        <div class="action-text">
+          <strong>Clear Memory</strong>
+          <span>Wipe all stored AI memories</span>
+        </div>
+        <svg class="action-arrow" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+
+      <a href="{% url 'logout' %}" class="action-link link-orange">
+        <div class="action-icon">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+        </div>
+        <div class="action-text">
+          <strong>Logout</strong>
+          <span>Sign out of your account</span>
+        </div>
+        <svg class="action-arrow" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+
+      <a href="{% url 'dashboard' %}" class="action-link link-gray">
+        <div class="action-icon">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+          </svg>
+        </div>
+        <div class="action-text">
+          <strong>Back to Dashboard</strong>
+          <span>Return to the main screen</span>
+        </div>
+        <svg class="action-arrow" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+
+    </div>
+  </div>
 
 </div>
 
-<!-- ===== JS FOR IMAGE PREVIEW ===== -->
 <script>
 function previewImage(event) {
-    const img = document.getElementById("previewImg");
-    img.src = URL.createObjectURL(event.target.files[0]);
+  const file = event.target.files[0];
+  if (!file) return;
+  document.getElementById("previewImg").src = URL.createObjectURL(file);
+  document.getElementById("fileNameDisplay").textContent = file.name;
 }
 </script>
 

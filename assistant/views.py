@@ -362,4 +362,42 @@ def export_history_pdf(request):
     p.save()
     return response
 
+# assistant/views.py
 
+# assistant/views.py
+
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from .models import AssistantMemory
+from .aad import analyze_image
+
+
+@login_required
+def home(request):
+
+    if request.method == "POST":
+
+        query = request.POST.get("query")
+        image_file = request.FILES.get("image_file")
+
+        if image_file:
+            if not query:
+                query = "Describe this image"
+            reply = analyze_image(image_file, query)
+
+        else:
+            reply = "Please upload an image."
+
+        AssistantMemory.objects.create(
+            user=request.user,
+            user_query=query,
+            assistant_reply=reply
+        )
+
+    memories = AssistantMemory.objects.filter(
+        user=request.user
+    ).order_by("created_at")
+
+    return render(request, "dashboard.html", {
+        "memories": memories
+    })
