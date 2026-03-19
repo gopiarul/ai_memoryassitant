@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-b)^gpu@a)06t^ye2qx*5^8%q*afjyti!0anjn-iet$i^-fu+5i
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-GEMINI_API_KEY = "AIzaSyBRnx9iH1nH7j_6fWvSZ94-69c3wClKFMs"
+GEMINI_API_KEY = "AIzaSyAp-HiCNjT1PcI6uBgHK53beoTomUDVQqY"
 
 
 
