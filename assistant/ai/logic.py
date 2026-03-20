@@ -249,6 +249,93 @@ def parse_date_from_query(q):
 
 
 # ============================================================
+# SMART REMINDER GENERATOR
+# ============================================================
+
+def generate_reminder(user):
+    """
+    Look at last 7 days of DailyMemory and suggest a reminder.
+    Uses Gemini if available, falls back to keyword-based reminders.
+    """
+    from datetime import date, timedelta
+    today = date.today()
+    week_ago = today - timedelta(days=7)
+
+    recent = DailyMemory.objects.filter(
+        user=user,
+        date__gte=week_ago
+    ).order_by("-date")[:10]
+
+    if not recent:
+        return None
+
+    events_text = " | ".join([m.date.strftime('%b %d') + ": " + m.event for m in recent])
+    latest_event = recent[0].event.lower()
+
+    # Try Gemini first
+    api_key = getattr(settings, "GEMINI_API_KEY", "")
+    if api_key:
+        url = (
+            "https://generativelanguage.googleapis.com/v1beta/models/"
+            "gemini-2.0-flash-lite:generateContent?key=" + api_key
+        )
+        prompt = (
+            "Based on these recent activities: " + events_text + ". "
+            "Suggest ONE short actionable follow-up reminder. "
+            "Max 12 words. Just the reminder text, nothing else."
+        )
+        payload = json.dumps({
+            "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+            "generationConfig": {"temperature": 0.7, "maxOutputTokens": 60}
+        }).encode("utf-8")
+        req = urllib.request.Request(
+            url, data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST"
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=8) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                reminder = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                reminder = reminder.strip('"').strip("'")
+                if len(reminder) > 5 and "wikipedia" not in reminder.lower():
+                    return reminder
+        except Exception:
+            pass  # fall through to keyword fallback
+
+    # Keyword-based fallback reminders
+    keyword_reminders = {
+        "gym":      "Don't forget to track your gym progress today!",
+        "workout":  "Rest and hydrate well after your workout.",
+        "study":    "Review your notes from yesterday's study session.",
+        "class":    "Revise what you learned in class today.",
+        "hospital": "Follow up on the doctor's advice from your visit.",
+        "medicine": "Remember to take your medicine on time.",
+        "meeting":  "Follow up on action items from your meeting.",
+        "project":  "Check your project progress and next steps.",
+        "birthday": "Send wishes or plan something special!",
+        "work":     "Review your tasks and plan for tomorrow.",
+        "exam":     "Revise your notes and get enough sleep tonight.",
+        "sleep":    "Maintain a consistent sleep schedule.",
+        "diet":     "Stay consistent with your diet plan today.",
+        "run":      "Track your running distance and pace.",
+        "walk":     "Great habit! Try to walk daily.",
+        "read":     "Continue reading — even 10 pages a day helps.",
+        "code":     "Push your code and review what you built.",
+        "cook":     "Try a new recipe or meal prep for tomorrow.",
+        "pray":     "Keep up your spiritual routine.",
+        "friend":   "Stay in touch — drop them a message today.",
+    }
+
+    for keyword, reminder in keyword_reminders.items():
+        if keyword in latest_event:
+            return reminder
+
+    # Generic fallback
+    return "Keep up the good work! Review your activities for today."
+
+
+# ============================================================
 # MAIN COMMAND PROCESSOR
 # ============================================================
 
@@ -351,7 +438,11 @@ def process_command(user, query):
 
         if event and len(event) > 3:
             DailyMemory.objects.create(user=user, date=full_date, event=event)
-            return f"✅ Saved for {label}: {event}"
+            reminder = generate_reminder(user)
+            if reminder:
+                reply = "✅ Saved for " + label + ": " + event + "\n\n💡 Reminder: " + reminder + "\n__REMINDER__" + reminder
+                return reply
+            return "✅ Saved for " + label + ": " + event
 
     # ========================================================
     # TODAY SUMMARY — now powered by Gemini

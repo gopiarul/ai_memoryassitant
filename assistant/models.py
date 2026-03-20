@@ -43,3 +43,13 @@ class DailyMemory(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.date}"
+
+
+class Reminder(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_done = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.text[:40]}"

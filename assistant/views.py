@@ -14,7 +14,7 @@ import json
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
-from .models import AssistantMemory, Profile
+from .models import AssistantMemory, Profile, Reminder
 from .ai.logic import process_command, detect_mood
 
 
@@ -108,6 +108,15 @@ def dashboard(request):
                 "speak_text": clean
             })
 
+        # Extract reminder if present
+        reminder_text = None
+        if "__REMINDER__" in response:
+            parts = response.split("__REMINDER__")
+            response = parts[0].strip()
+            reminder_text = parts[1].strip() if len(parts) > 1 else None
+            if reminder_text:
+                Reminder.objects.create(user=request.user, text=reminder_text)
+
         AssistantMemory.objects.create(
             user=request.user,
             user_query=query,
@@ -121,9 +130,15 @@ def dashboard(request):
         user=request.user
     ).order_by("created_at")
 
+    # Latest reminders for sidebar card
+    reminders = Reminder.objects.filter(
+        user=request.user, is_done=False
+    ).order_by("-created_at")[:3]
+
     return render(request, "dashboard.html", {
-        "memories": memories,
-        "speak_text": speak_text
+        "memories":  memories,
+        "speak_text": speak_text,
+        "reminders": reminders,
     })
 
 
@@ -386,6 +401,15 @@ def mood_chart(request):
         "donut_counts":     json.dumps([m["count"] for m in mood_breakdown]),
         "recent_with_mood": recent_with_mood,
     })
+
+
+# ----------------------------------------------------------------
+# MARK REMINDER DONE
+# ----------------------------------------------------------------
+@login_required
+def reminder_done(request, id):
+    Reminder.objects.filter(id=id, user=request.user).update(is_done=True)
+    return redirect("dashboard")
 
 
 # ----------------------------------------------------------------
