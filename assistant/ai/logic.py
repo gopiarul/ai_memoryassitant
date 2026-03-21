@@ -1,5 +1,6 @@
 import re
 import time
+import base64
 import urllib.request
 import urllib.error
 import json
@@ -336,6 +337,239 @@ def generate_reminder(user):
 
 
 # ============================================================
+# IMAGE ANALYSIS WITH GEMINI VISION
+# ============================================================
+
+def analyze_image(image_file, user_question="What is in this image?"):
+    """
+    Send image to Gemini Vision API and get description.
+    image_file: Django InMemoryUploadedFile
+    user_question: optional question about the image
+    Returns: string description
+    """
+    api_key = getattr(settings, "GEMINI_API_KEY", "")
+    if not api_key:
+        return "Gemini API key not configured."
+
+    # Read and encode image as base64
+    image_data = image_file.read()
+    image_b64 = base64.b64encode(image_data).decode("utf-8")
+
+    # Detect mime type from file name
+    name = image_file.name.lower()
+    if name.endswith(".png"):
+        mime_type = "image/png"
+    elif name.endswith(".gif"):
+        mime_type = "image/gif"
+    elif name.endswith(".webp"):
+        mime_type = "image/webp"
+    else:
+        mime_type = "image/jpeg"
+
+    url = (
+        "https://generativelanguage.googleapis.com/v1beta/models/"
+        "gemini-2.0-flash-lite:generateContent?key=" + api_key
+    )
+
+    payload = json.dumps({
+        "contents": [{
+            "role": "user",
+            "parts": [
+                {
+                    "inline_data": {
+                        "mime_type": mime_type,
+                        "data": image_b64
+                    }
+                },
+                {
+                    "text": user_question
+                }
+            ]
+        }],
+        "generationConfig": {
+            "temperature": 0.7,
+            "maxOutputTokens": 500
+        }
+    }).encode("utf-8")
+
+    req = urllib.request.Request(
+        url,
+        data=payload,
+        headers={"Content-Type": "application/json"},
+        method="POST"
+    )
+
+    for attempt in range(2):
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                return data["candidates"][0]["content"]["parts"][0]["text"].strip()
+        except urllib.error.HTTPError as e:
+            if e.code == 429 and attempt == 0:
+                time.sleep(2)
+                continue
+            try:
+                error_body = e.read().decode("utf-8")
+            except Exception:
+                error_body = str(e)
+            return "Image analysis failed: " + error_body[:100]
+        except Exception as e:
+            return "Could not analyze image: " + str(e)
+
+    return "Image analysis failed. Please try again."
+
+
+# ============================================================
+# PDF ANALYSIS WITH GEMINI
+# ============================================================
+
+def analyze_pdf(pdf_file):
+    """
+    Extract text from PDF and summarize with Gemini.
+    pdf_file: Django InMemoryUploadedFile
+    Returns: summary string
+    """
+    import io
+    try:
+        import PyPDF2
+    except ImportError:
+        return "PyPDF2 not installed. Run: pip install PyPDF2"
+
+    # Extract text from PDF
+    try:
+        reader = PyPDF2.PdfReader(io.BytesIO(pdf_file.read()))
+        text = ""
+        for page in reader.pages:
+            text += page.extract_text() or ""
+        text = text.strip()
+    except Exception as e:
+        return "Could not read PDF: " + str(e)
+
+    if not text:
+        return "Could not extract text from this PDF. It may be a scanned image PDF."
+
+    # Truncate if too long — Gemini has token limits
+    if len(text) > 3000:
+        text = text[:3000] + "..."
+
+    # Send to Gemini for summary
+    api_key = getattr(settings, "GEMINI_API_KEY", "")
+    if not api_key:
+        return "Gemini API key not configured."
+
+    url = (
+        "https://generativelanguage.googleapis.com/v1beta/models/"
+        "gemini-2.0-flash-lite:generateContent?key=" + api_key
+    )
+
+    prompt = (
+        "Summarize this document clearly in 5-6 sentences. "
+        "Include the main topic, key points, and any important conclusions.\n\n"
+        "Document text:\n" + text
+    )
+
+    payload = json.dumps({
+        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+        "generationConfig": {"temperature": 0.5, "maxOutputTokens": 600}
+    }).encode("utf-8")
+
+    req = urllib.request.Request(
+        url,
+        data=payload,
+        headers={"Content-Type": "application/json"},
+        method="POST"
+    )
+
+    for attempt in range(2):
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                return data["candidates"][0]["content"]["parts"][0]["text"].strip()
+        except urllib.error.HTTPError as e:
+            if e.code == 429 and attempt == 0:
+                time.sleep(2)
+                continue
+            if e.code == 429:
+                # Fallback — return extracted text preview
+                return "PDF Text Preview (Gemini busy):\n" + text[:500] + "..."
+            try:
+                error_body = e.read().decode("utf-8")
+            except Exception:
+                error_body = str(e)
+            return "PDF analysis failed: " + error_body[:100]
+        except Exception as e:
+            return "Could not analyze PDF: " + str(e)
+
+    return "PDF analysis failed. Please try again."
+
+
+# ============================================================
+# GOAL TRACKING
+# ============================================================
+
+def check_goal_progress(user, goal):
+    """
+    Check progress on a goal by scanning recent DailyMemory entries.
+    Returns a progress report string.
+    """
+    from datetime import date, timedelta
+    today = date.today()
+    week_ago = today - timedelta(days=7)
+
+    recent = DailyMemory.objects.filter(
+        user=user,
+        date__gte=week_ago
+    ).order_by("-date")[:20]
+
+    if not recent:
+        return "No recent activities found to track this goal. Start logging your daily activities!"
+
+    events_text = " | ".join([m.date.strftime("%b %d") + ": " + m.event for m in recent])
+
+    api_key = getattr(settings, "GEMINI_API_KEY", "")
+    if not api_key:
+        return "Gemini API key not configured."
+
+    url = (
+        "https://generativelanguage.googleapis.com/v1beta/models/"
+        "gemini-2.0-flash-lite:generateContent?key=" + api_key
+    )
+
+    prompt = (
+        "Goal: " + goal.title + "\n"
+        "Recent activities (last 7 days): " + events_text + "\n\n"
+        "Analyze how well this person is progressing toward their goal based on their activities. "
+        "Give a short 2-3 sentence progress report. Be encouraging but honest. "
+        "Include a percentage estimate of goal completion this week."
+    )
+
+    payload = json.dumps({
+        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+        "generationConfig": {"temperature": 0.7, "maxOutputTokens": 200}
+    }).encode("utf-8")
+
+    req = urllib.request.Request(
+        url, data=payload,
+        headers={"Content-Type": "application/json"},
+        method="POST"
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            return data["candidates"][0]["content"]["parts"][0]["text"].strip()
+    except Exception:
+        # Fallback — simple keyword matching
+        goal_words = goal.title.lower().split()
+        matched = [m for m in recent if any(w in m.event.lower() for w in goal_words)]
+        count = len(matched)
+        total = len(recent)
+        if count == 0:
+            return f"No activities related to your goal '{goal.title}' found this week. Try to get started today!"
+        return f"You worked on '{goal.title}' {count} time(s) this week. Keep it up!"
+
+
+# ============================================================
 # MAIN COMMAND PROCESSOR
 # ============================================================
 
@@ -370,6 +604,57 @@ def process_command(user, query):
         return "__SYSTEM__Opening Command Prompt"
 
     # ========================================================
+    # GOAL COMMANDS
+    # ========================================================
+    if q.startswith("set goal:") or q.startswith("my goal is") or q.startswith("i want to"):
+        from assistant.models import Goal
+        goal_text = query
+        for prefix in ["set goal:", "my goal is", "i want to"]:
+            if q.startswith(prefix):
+                goal_text = query[len(prefix):].strip()
+                break
+        if goal_text and len(goal_text) > 3:
+            Goal.objects.create(user=user, title=goal_text)
+            return "Goal set: " + goal_text + "\n\nI will track your progress. Log daily activities and type 'check my goals' anytime!"
+        return "Please specify your goal. Example: set goal: exercise 5 days a week"
+
+    if "check my goals" in q or "my goals" in q or "goal progress" in q or "how am i doing" in q:
+        from assistant.models import Goal
+        from django.utils import timezone
+        goals = Goal.objects.filter(user=user, status="active").order_by("-created_at")
+        if not goals.exists():
+            return "You have no active goals yet. Set one by typing: set goal: your goal here"
+        reports = []
+        for goal in goals[:3]:
+            report = check_goal_progress(user, goal)
+            goal.progress_report = report
+            goal.last_checked = timezone.now()
+            goal.save()
+            reports.append("Goal: " + goal.title + "\n" + report)
+        return "\n\n".join(reports)
+
+    if "complete goal" in q or "finished goal" in q or "achieved goal" in q:
+        from assistant.models import Goal
+        goals = Goal.objects.filter(user=user, status="active")
+        if goals.exists():
+            goal = goals.last()
+            goal.status = "completed"
+            goal.save()
+            return "Congratulations! Goal completed: " + goal.title
+        return "No active goals found."
+
+    if "list goals" in q or "show goals" in q or "all goals" in q:
+        from assistant.models import Goal
+        goals = Goal.objects.filter(user=user).order_by("-created_at")[:10]
+        if not goals.exists():
+            return "You have no goals yet. Set one by typing: set goal: your goal here"
+        response = "Your Goals:\n"
+        for g in goals:
+            tag = "Done" if g.status == "completed" else "Active" if g.status == "active" else "Abandoned"
+            response += "\n[" + tag + "] " + g.title
+        return response
+
+
     # MOOD CHECK (user asking how they feel / mood history)
     # ========================================================
     if "how am i feeling" in q or "what is my mood" in q or "my mood today" in q:

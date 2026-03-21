@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Goals — MnemoX</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; background:#0d0d0f; color:#e8e8f0; font-family:'Plus Jakarta Sans',sans-serif; }
+:root {
+  --bg:#0d0d0f; --nav:#111114; --panel:#18181c; --surface:#1e1e24;
+  --border:rgba(255,255,255,0.07); --accent:#7c5cfc; --accent2:#5b8af0;
+  --green:#22c55e; --text:#e8e8f0; --dim:#6b6b80; --muted:#2e2e38;
+}
+.orb { position:fixed; border-radius:50%; pointer-events:none; filter:blur(110px); z-index:0; }
+.orb1 { width:400px; height:400px; top:-150px; left:-100px; background:radial-gradient(circle,rgba(124,92,252,0.08),transparent 70%); }
+.orb2 { width:300px; height:300px; bottom:-80px; right:20%; background:radial-gradient(circle,rgba(91,138,240,0.07),transparent 70%); }
+.navbar { position:relative; z-index:10; height:56px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; border-bottom:1px solid var(--border); background:var(--nav); }
+.nav-brand { display:flex; align-items:center; gap:8px; text-decoration:none; }
+.nav-brand-icon { width:30px; height:30px; border-radius:8px; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; }
+.nav-brand-name { font-size:16px; font-weight:700; color:var(--text); }
+.nav-links { display:flex; align-items:center; gap:2px; }
+.nav-link { text-decoration:none; color:var(--dim); font-size:13px; font-weight:500; padding:5px 12px; border-radius:7px; transition:all 0.15s; }
+.nav-link:hover { color:var(--text); background:var(--surface); }
+.nav-link.active { color:var(--text); background:var(--surface); }
+.nav-settings { text-decoration:none; color:var(--dim); font-size:13px; font-weight:500; padding:5px 12px; border-radius:7px; border:1px solid var(--border); transition:all 0.15s; }
+.nav-settings:hover { color:var(--text); }
+.page { position:relative; z-index:2; max-width:900px; margin:0 auto; padding:36px 24px 60px; }
+.page-header { margin-bottom:28px; }
+.page-title { font-size:26px; font-weight:700; color:var(--text); letter-spacing:-0.02em; }
+.page-sub { font-size:13px; color:var(--dim); margin-top:4px; }
+
+/* ADD GOAL FORM */
+.add-goal-card { background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:20px; margin-bottom:24px; }
+.add-goal-label { font-size:12px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--dim); margin-bottom:10px; }
+.add-goal-row { display:flex; gap:10px; }
+.add-goal-input { flex:1; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:10px 14px; font-size:14px; color:var(--text); font-family:'Plus Jakarta Sans',sans-serif; outline:none; transition:border-color 0.2s; }
+.add-goal-input:focus { border-color:rgba(124,92,252,0.4); }
+.add-goal-input::placeholder { color:var(--muted); }
+.add-btn { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:white; border:none; border-radius:10px; padding:10px 20px; font-size:13px; font-weight:600; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; transition:opacity 0.2s; white-space:nowrap; }
+.add-btn:hover { opacity:0.85; }
+
+/* GOAL CARDS */
+.section-title { font-size:13px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--dim); margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.section-title-dot { width:6px; height:6px; border-radius:50%; background:var(--accent); }
+.goals-grid { display:flex; flex-direction:column; gap:12px; margin-bottom:32px; }
+.goal-card { background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:18px 20px; transition:border-color 0.2s; }
+.goal-card:hover { border-color:rgba(124,92,252,0.3); }
+.goal-card.completed { border-color:rgba(34,197,94,0.2); opacity:0.7; }
+.goal-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+.goal-title { font-size:14px; font-weight:600; color:var(--text); line-height:1.4; }
+.goal-actions { display:flex; gap:6px; flex-shrink:0; }
+.goal-btn { background:var(--surface); border:1px solid var(--border); border-radius:7px; padding:5px 10px; font-size:11px; font-weight:500; cursor:pointer; color:var(--dim); font-family:'Plus Jakarta Sans',sans-serif; transition:all 0.15s; white-space:nowrap; }
+.goal-btn:hover { color:var(--text); border-color:rgba(124,92,252,0.3); }
+.goal-btn.check:hover { color:var(--accent); }
+.goal-btn.complete:hover { color:var(--green); border-color:rgba(34,197,94,0.3); }
+.goal-btn.delete:hover { color:#ef4444; border-color:rgba(239,68,68,0.3); }
+.goal-date { font-size:11px; color:var(--muted); margin-top:4px; }
+.goal-report { background:var(--surface); border:1px solid rgba(124,92,252,0.15); border-radius:8px; padding:10px 12px; margin-top:12px; font-size:12.5px; color:var(--dim); line-height:1.6; }
+.goal-report-label { font-size:10px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--accent); margin-bottom:4px; }
+.empty-state { text-align:center; padding:40px 20px; color:var(--muted); font-size:13px; line-height:1.7; }
+
+/* TIPS */
+.tips-card { background:rgba(124,92,252,0.06); border:1px solid rgba(124,92,252,0.15); border-radius:14px; padding:16px 20px; margin-top:24px; }
+.tips-title { font-size:12px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--accent); margin-bottom:10px; }
+.tip { font-size:12.5px; color:var(--dim); margin-bottom:5px; display:flex; gap:8px; }
+.tip-icon { color:var(--accent); flex-shrink:0; }
+
+@media(max-width:600px){ .nav-links{display:none} .page{padding:20px 14px 40px} .add-goal-row{flex-direction:column} }
+</style>
+</head>
+<body>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<nav class="navbar">
+  <a href="{% url 'dashboard' %}" class="nav-brand">
+    <div class="nav-brand-icon">
+      <svg width="16" height="16" fill="none" stroke="white" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+    </div>
+    <span class="nav-brand-name">MnemoX</span>
+  </a>
+  <div class="nav-links">
+    <a href="{% url 'dashboard' %}" class="nav-link">Home</a>
+    <a href="{% url 'history' %}" class="nav-link">History</a>
+    <a href="{% url 'memory' %}" class="nav-link">Memory</a>
+    <a href="{% url 'mood_chart' %}" class="nav-link">Mood</a>
+    <a href="{% url 'goals' %}" class="nav-link active">Goals</a>
+    <a href="{% url 'profile' %}" class="nav-link">Profile</a>
+  </div>
+  <a href="{% url 'settings' %}" class="nav-settings">Settings</a>
+</nav>
+
+<div class="page">
+  <div class="page-header">
+    <div class="page-title">Goal Tracker</div>
+    <div class="page-sub">Set goals — AI tracks your progress from daily activities</div>
+  </div>
+
+  <!-- ADD GOAL -->
+  <div class="add-goal-card">
+    <div class="add-goal-label">Set a new goal</div>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add">
+      <div class="add-goal-row">
+        <input type="text" name="title" class="add-goal-input"
+          placeholder="e.g. Exercise 5 days a week, Read 20 pages daily, Study Python every day..."
+          required>
+        <button type="submit" class="add-btn">Set Goal</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ACTIVE GOALS -->
+  <div class="section-title">
+    <div class="section-title-dot"></div>
+    Active Goals ({{ active_goals.count }})
+  </div>
+  <div class="goals-grid">
+    {% for goal in active_goals %}
+    <div class="goal-card">
+      <div class="goal-top">
+        <div>
+          <div class="goal-title">{{ goal.title }}</div>
+          <div class="goal-date">Set on {{ goal.created_at|date:"M d, Y" }}
+            {% if goal.last_checked %} · Last checked {{ goal.last_checked|date:"M d" }}{% endif %}
+          </div>
+        </div>
+        <div class="goal-actions">
+          <form method="post" style="display:inline">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="check">
+            <input type="hidden" name="goal_id" value="{{ goal.id }}">
+            <button type="submit" class="goal-btn check">Check Progress</button>
+          </form>
+          <form method="post" style="display:inline">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="complete">
+            <input type="hidden" name="goal_id" value="{{ goal.id }}">
+            <button type="submit" class="goal-btn complete">Done</button>
+          </form>
+          <form method="post" style="display:inline">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="goal_id" value="{{ goal.id }}">
+            <button type="submit" class="goal-btn delete">Delete</button>
+          </form>
+        </div>
+      </div>
+      {% if goal.progress_report %}
+      <div class="goal-report">
+        <div class="goal-report-label">AI Progress Report</div>
+        {{ goal.progress_report }}
+      </div>
+      {% endif %}
+    </div>
+    {% empty %}
+    <div class="empty-state">
+      No active goals yet.<br>Set your first goal above to get started.
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- COMPLETED GOALS -->
+  {% if completed_goals %}
+  <div class="section-title">
+    <div class="section-title-dot" style="background:var(--green)"></div>
+    Completed Goals ({{ completed_goals.count }})
+  </div>
+  <div class="goals-grid">
+    {% for goal in completed_goals %}
+    <div class="goal-card completed">
+      <div class="goal-top">
+        <div>
+          <div class="goal-title">{{ goal.title }}</div>
+          <div class="goal-date">Completed</div>
+        </div>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="delete">
+          <input type="hidden" name="goal_id" value="{{ goal.id }}">
+          <button type="submit" class="goal-btn delete">Remove</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- TIPS -->
+  <div class="tips-card">
+    <div class="tips-title">How to use goal tracking</div>
+    <div class="tip"><span class="tip-icon">1.</span> Set a goal above or type "set goal: exercise daily" in chat</div>
+    <div class="tip"><span class="tip-icon">2.</span> Log your daily activities in chat: "today I went to gym"</div>
+    <div class="tip"><span class="tip-icon">3.</span> Click "Check Progress" or type "check my goals" in chat</div>
+    <div class="tip"><span class="tip-icon">4.</span> AI scans your last 7 days of activities and reports progress</div>
+    <div class="tip"><span class="tip-icon">5.</span> Mark as Done when you achieve your goal</div>
+  </div>
+</div>
+</body>
+</html>

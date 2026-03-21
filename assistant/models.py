@@ -53,3 +53,20 @@ class Reminder(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.text[:40]}"
+
+
+class Goal(models.Model):
+    STATUS_CHOICES = [
+        ("active", "Active"),
+        ("completed", "Completed"),
+        ("abandoned", "Abandoned"),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    title = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="active")
+    last_checked = models.DateTimeField(null=True, blank=True)
+    progress_report = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.title[:40]}"

@@ -14,8 +14,8 @@ import json
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
-from .models import AssistantMemory, Profile, Reminder
-from .ai.logic import process_command, detect_mood
+from .models import AssistantMemory, Profile, Reminder, Goal
+from .ai.logic import process_command, detect_mood, analyze_image, analyze_pdf, check_goal_progress
 
 
 # ----------------------------------------------------------------
@@ -71,6 +71,55 @@ def dashboard(request):
     speak_text = ""
     if request.method == "POST":
         query = request.POST.get("query", "").strip()
+        image_file = request.FILES.get("image_file")
+
+        # PDF UPLOAD — extract and summarize
+        pdf_file = request.FILES.get("pdf_file")
+        if pdf_file:
+            response = analyze_pdf(pdf_file)
+            mood = "neutral"
+            AssistantMemory.objects.create(
+                user=request.user,
+                user_query="📄 Summarize: " + pdf_file.name,
+                assistant_reply=response,
+                mood=mood
+            )
+            memories = AssistantMemory.objects.filter(
+                user=request.user
+            ).order_by("created_at")
+            reminders = Reminder.objects.filter(
+                user=request.user, is_done=False
+            ).order_by("-created_at")[:3]
+            return render(request, "dashboard.html", {
+                "memories":   memories,
+                "speak_text": response,
+                "reminders":  reminders,
+            })
+
+        # IMAGE UPLOAD — analyze with Gemini Vision
+        if image_file:
+            if not query:
+                query = "What is in this image?"
+            response = analyze_image(image_file, query)
+            mood = detect_mood(query)
+            AssistantMemory.objects.create(
+                user=request.user,
+                user_query="📷 " + query,
+                assistant_reply=response,
+                mood=mood
+            )
+            memories = AssistantMemory.objects.filter(
+                user=request.user
+            ).order_by("created_at")
+            reminders = Reminder.objects.filter(
+                user=request.user, is_done=False
+            ).order_by("-created_at")[:3]
+            return render(request, "dashboard.html", {
+                "memories":   memories,
+                "speak_text": response,
+                "reminders":  reminders,
+            })
+
         if not query:
             return redirect("dashboard")
 
@@ -135,10 +184,16 @@ def dashboard(request):
         user=request.user, is_done=False
     ).order_by("-created_at")[:3]
 
+    # Active goals for sidebar
+    goals = Goal.objects.filter(
+        user=request.user, status="active"
+    ).order_by("-created_at")[:3]
+
     return render(request, "dashboard.html", {
-        "memories":  memories,
+        "memories":   memories,
         "speak_text": speak_text,
-        "reminders": reminders,
+        "reminders":  reminders,
+        "goals":      goals,
     })
 
 
@@ -410,6 +465,40 @@ def mood_chart(request):
 def reminder_done(request, id):
     Reminder.objects.filter(id=id, user=request.user).update(is_done=True)
     return redirect("dashboard")
+
+
+# ----------------------------------------------------------------
+# GOALS PAGE
+# ----------------------------------------------------------------
+@login_required
+def goals_view(request):
+    if request.method == "POST":
+        action = request.POST.get("action")
+        goal_id = request.POST.get("goal_id")
+        if action == "add":
+            title = request.POST.get("title", "").strip()
+            if title:
+                Goal.objects.create(user=request.user, title=title)
+        elif action == "complete" and goal_id:
+            Goal.objects.filter(id=goal_id, user=request.user).update(status="completed")
+        elif action == "delete" and goal_id:
+            Goal.objects.filter(id=goal_id, user=request.user).delete()
+        elif action == "check" and goal_id:
+            from django.utils import timezone
+            goal = Goal.objects.filter(id=goal_id, user=request.user).first()
+            if goal:
+                report = check_goal_progress(request.user, goal)
+                goal.progress_report = report
+                goal.last_checked = timezone.now()
+                goal.save()
+        return redirect("goals")
+
+    active_goals = Goal.objects.filter(user=request.user, status="active").order_by("-created_at")
+    completed_goals = Goal.objects.filter(user=request.user, status="completed").order_by("-created_at")
+    return render(request, "goals.html", {
+        "active_goals": active_goals,
+        "completed_goals": completed_goals,
+    })
 
 
 # ----------------------------------------------------------------
