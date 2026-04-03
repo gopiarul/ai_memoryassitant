@@ -289,8 +289,8 @@ body { background:var(--bg); color:var(--text); font-family:var(--font); display
     </div>
     {% endif %}
     <div class="sidebar-history">
-      {% for m in memories %}
-        <div class="hist-item">{{ m.user_query|truncatechars:30 }}</div>
+      {% for m in memories reversed %}
+        <div class="hist-item" onclick="scrollToMsg({{ m.id }})">{{ m.user_query|truncatechars:30 }}</div>
       {% empty %}
         <div class="sidebar-empty">No chats yet.<br>Start a conversation.</div>
       {% endfor %}
@@ -337,7 +337,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--font); display
       {% else %}
       {% for m in memories %}
       <!-- user -->
-      <div class="msg user">
+      <div class="msg user" id="msg-{{ m.id }}">
         <div class="avatar"><img src="{% static 'images/back3.jpg' %}" alt="You"></div>
         <div class="bubble">
           {{ m.user_query }}
@@ -421,6 +421,18 @@ const voiceBadge = document.getElementById("voiceBadge");
 const voiceLabel = document.getElementById("voiceLabel");
 
 // Scroll to bottom
+function scrollToMsg(id) {
+  const el = document.getElementById("msg-" + id);
+  if (el) {
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.style.transition = "background 0.3s";
+    el.querySelector(".bubble").style.outline = "2px solid var(--accent)";
+    setTimeout(() => {
+      el.querySelector(".bubble").style.outline = "none";
+    }, 1500);
+  }
+}
+
 function scrollBottom() {
   msgs.scrollTop = msgs.scrollHeight;
 }
@@ -454,7 +466,13 @@ function speak(text) {
   // Load voices properly
   function doSpeak() {
     const vs = window.speechSynthesis.getVoices();
-    const pv = vs.find(v => v.name.includes("Google") || v.name.includes("Samantha"));
+    const pv = vs.find(v =>
+      v.name.includes("Google UK English Male") ||
+      v.name.includes("Microsoft David") ||
+      v.name.includes("Microsoft Mark") ||
+      v.name.includes("Microsoft James") ||
+      v.name.toLowerCase().includes("male")
+    ) || vs.find(v => v.name.includes("Google US English")) || vs[0];
     if (pv) u.voice = pv;
     u.onstart = () => { stopBtn.classList.add("on"); voiceBadge.classList.add("on"); voiceLabel.textContent = "Speaking"; };
     u.onend   = () => { stopBtn.classList.remove("on"); voiceBadge.classList.remove("on"); };
